@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>競馬レース予想シミュレーター</title>
+<style>
+:root{color-scheme:light dark;--pg:#f4f7f5;--pg-ink:#15231c;--pg-mute:#5b6b62;--pg-line:#c9d5cd;--pg-card:#fff;--pg-turf:#0f3d2e;--pg-green:#1b7f52}
+@media (prefers-color-scheme:dark){:root{--pg:#0a110e;--pg-ink:#e8f0ea;--pg-mute:#9fb1a6;--pg-line:#2b3b32;--pg-card:#16221c;--pg-green:#46c48b}}
+body{margin:0;background:var(--pg);color:var(--pg-ink);font-family:-apple-system,'Hiragino Sans','Noto Sans JP',Meiryo,sans-serif;line-height:1.55}
+main{max-width:920px;margin:0 auto;padding:12px 12px 40px}
+header.top{background:var(--pg-turf);color:#fff;border-radius:14px;padding:14px 18px 12px;margin-bottom:12px}
+header.top h1{font-size:21px;margin:0 0 2px;color:#fff;font-weight:800}
+header.top p{margin:0;font-size:12.5px;color:#fff;opacity:.88}
+.tabs{display:flex;gap:6px;margin:0 0 12px}
+.tabs button{flex:1;padding:9px;border:1px solid var(--pg-line);background:var(--pg-card);color:var(--pg-ink);border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+.tabs button.on{background:var(--pg-turf);border-color:var(--pg-turf);color:#fff}
+.formcard{background:var(--pg-card);border:1px solid var(--pg-line);border-radius:12px;padding:12px 14px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.form .wide{grid-column:1/-1}
+.form label{font-size:12.5px;color:var(--pg-mute);display:flex;flex-direction:column;gap:3px;font-weight:700}
+.form select,.form input[type=number],.form input[type=text],.form textarea{padding:8px;font-size:15px;border-radius:8px;border:1px solid var(--pg-line);background:var(--pg);color:var(--pg-ink);font-family:inherit}
+.form textarea{height:150px;font-size:13px}
+.form .chk{flex-direction:row;align-items:center;gap:6px;color:var(--pg-ink);font-weight:400}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{flex:1;min-width:84px;padding:8px 6px;border:1px solid var(--pg-line);background:var(--pg);color:var(--pg-ink);border-radius:9px;font-size:13.5px;cursor:pointer}
+.seg button.on{background:var(--pg-green);border-color:var(--pg-green);color:#fff;font-weight:800}
+.seg.region button{min-width:60px}
+.paceh{font-size:12px;color:var(--pg-mute);margin-top:4px;font-weight:400}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button.pri{padding:11px 26px;border:none;border-radius:10px;background:var(--pg-turf);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+button.sec{padding:8px 14px;border:1px solid var(--pg-line);border-radius:9px;background:var(--pg-card);color:var(--pg-ink);font-size:13px;cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+#msg{margin:10px 0;font-size:14px}
+.small{font-size:12px;opacity:.75}
+details{margin:12px 0;background:var(--pg-card);border:1px solid var(--pg-line);border-radius:10px;padding:8px 12px}summary{cursor:pointer;font-weight:700}
+textarea#share{width:100%;height:120px;font-size:13px;background:var(--pg-card);color:var(--pg-ink);border:1px solid var(--pg-line);border-radius:8px;padding:8px;box-sizing:border-box}
+.hide{display:none!important}
+.hint{font-size:12.5px;color:var(--pg-mute);margin:0 0 4px}
+@media (max-width:560px){.form{grid-template-columns:1fr}}
+.ks{--paper:#eaf0ec;--card:#ffffff;--ink:#15231c;--mute:#5b6b62;--line:#d3ddd6;--tint:#f2f8f4;--turf:#0f3d2e;
+--green:#1b7f52;--teal:#23728f;--red:#c62828;--amber-bg:#fff2d6;--amber-line:#e0a100;--blue-bg:#e3eefb;
+--gold:#c8921a;--silver:#8895a0;--bronze:#a8662a;--violet:#6b5bd1;--orange:#d9480f;--brown:#8a5a2b;
+font-family:-apple-system,'Hiragino Sans','Noto Sans JP',Meiryo,sans-serif;line-height:1.55;max-width:900px;
+background:var(--paper);color:var(--ink);padding:12px;border-radius:14px}
+@media (prefers-color-scheme:dark){.ks{--paper:#0d1612;--card:#16221c;--ink:#e8f0ea;--mute:#9fb1a6;--line:#2b3b32;--tint:#1b2b23;
+--green:#46c48b;--teal:#62b8d8;--red:#ff7b73;--amber-bg:#3a2e17;--amber-line:#b8860b;--blue-bg:#17293c;
+--gold:#e0b04a;--silver:#aab6bd;--bronze:#d08a50;--violet:#a79bff;--orange:#ff8a5c;--brown:#c99a6a}}
+.ks *{box-sizing:border-box}
+.ks .hero{background:var(--turf);color:#fff;border-radius:12px 12px 0 0;padding:16px 18px 14px}
+.ks .hero,.ks .hero *{color:#fff!important}
+.ks .hero .top{display:flex;gap:12px 18px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+.ks .hero h2{margin:0;padding:0;border:0;font-size:24px;font-weight:800;line-height:1.25;letter-spacing:.02em;color:#fff!important}
+.ks .hero .when{margin-top:4px;font-size:13px;opacity:.9}
+.ks .hero .rec{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:7px 14px;text-align:center;min-width:150px}
+.ks .hero .rec .k{display:block;font-size:11.5px;opacity:.9}
+.ks .hero .rec .stars{display:block;font-size:22px;line-height:1.2;letter-spacing:3px;color:#ffd166!important}
+.ks .hero .rec .lv{display:block;font-size:13px;font-weight:800}
+.ks .hero .whyrec{margin-top:8px;font-size:12.5px;opacity:.92}
+.ks .hero .pills{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+.ks .hero .pills span{padding:2px 11px;border-radius:999px;font-size:12.5px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25)}
+.ks .hero .pills span.key{background:#fff;color:#0f3d2e!important;border-color:#fff;font-weight:700}
+.ks .gate{display:flex;height:7px;border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:12px}
+.ks .gate i{flex:1;display:block;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.ks .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:10px 0;font-size:14px}
+.ks .card.sub{font-size:12.5px;color:var(--mute)}
+.ks .warn{background:var(--amber-bg);border-color:var(--amber-line);border-left:6px solid var(--amber-line);font-size:13.5px}
+.ks .chg{background:var(--blue-bg);border-color:var(--teal);border-left:6px solid var(--teal);font-size:13.5px}
+.ks h3{color:var(--ink)!important;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:22px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--ink);font-size:17px;font-weight:800}
+.ks .sub{color:var(--mute);font-size:12.5px;font-weight:400}
+.ks h3 .sub{font-weight:400}
+.ks .tblwrap{overflow-x:auto}
+.ks table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid var(--line);border-radius:10px;font-size:13.5px}
+.ks th{background:var(--tint);color:var(--mute);font-weight:700;font-size:12px;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.ks td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.ks tr:last-child td{border-bottom:none}
+.ks tr.top td{background:var(--tint)}
+.ks tr.p1 td:first-child{box-shadow:inset 5px 0 0 var(--gold)}
+.ks tr.p2 td:first-child{box-shadow:inset 5px 0 0 var(--silver)}
+.ks tr.p3 td:first-child{box-shadow:inset 5px 0 0 var(--bronze)}
+.ks tr.cur td{background:var(--blue-bg)}
+.ks td,.ks th{color:var(--ink)}
+.ks th{color:var(--mute)}
+.ks .rk{display:inline-grid;place-items:center;min-width:28px;height:28px;border-radius:50%;font-weight:800;font-size:15px;background:var(--line);color:var(--ink)}
+.ks .rk.g1{background:var(--gold);color:#fff}.ks .rk.g2{background:var(--silver);color:#fff}.ks .rk.g3{background:var(--bronze);color:#fff}
+.ks .mark{font-size:21px;font-weight:700;display:inline-block;width:26px;text-align:center}
+.ks .mk0{color:var(--red)}.ks .mk1{color:var(--teal)}.ks .mk2{color:var(--green)}.ks .mk3,.ks .mk4{color:var(--mute)}
+.ks .no{display:inline-block;min-width:26px;height:26px;line-height:26px;text-align:center;border-radius:6px;font-weight:800;font-size:13.5px;margin-right:7px;border:1px solid rgba(128,128,128,.5)}
+.ks .nm{font-weight:800;font-size:15px}.ks .jk{color:var(--mute);font-size:12px;margin-left:6px}
+.ks .why{display:block;font-size:12px;color:var(--mute);margin:2px 0 0 33px}
+.ks .sty{font-size:11px;padding:1px 8px;border-radius:9px;background:var(--line);margin-left:6px;white-space:nowrap}
+.ks .bar{display:inline-block;vertical-align:middle;width:78px;height:10px;border-radius:5px;background:var(--line);overflow:hidden;margin-right:8px}
+.ks .bar i{display:block;height:100%;background:var(--green);border-radius:5px}
+.ks .bar.g i{background:var(--teal)}
+.ks .num{font-variant-numeric:tabular-nums;font-size:13.5px;white-space:nowrap}
+.ks .num b{font-size:15px}
+.ks .banner{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center}
+.ks .kind,.ks .role{color:#fff}
+.ks .kind{font-weight:800;font-size:15px;color:#fff;padding:2px 14px;border-radius:999px;background:var(--mute)}
+.ks .kind.kd1{background:var(--green)}.ks .kind.kd2{background:#b7791f}.ks .kind.kd3{background:var(--red)}
+.ks .tk{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--mute);border-radius:10px;margin:10px 0;overflow:hidden}
+.ks .tk.r1{border-left-color:var(--green)}.ks .tk.r2{border-left-color:var(--violet)}.ks .tk.r3{border-left-color:var(--brown)}.ks .tk.r4{border-left-color:var(--orange)}
+.ks .tk .hd{padding:9px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ks .tk .hd b{font-size:16px}
+.ks .tk .bd{padding:2px 14px 12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ks .role{font-size:11.5px;font-weight:700;padding:1px 10px;border-radius:9px;color:#fff;background:var(--mute)}
+.ks .role.r1{background:var(--green)}.ks .role.r2{background:var(--violet)}.ks .role.r3{background:var(--brown)}.ks .role.r4{background:var(--orange)}
+.ks .pts{margin-left:auto;font-size:12.5px;color:var(--mute)}
+.ks .st{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.ks .st>div{background:var(--card);padding:8px 14px}
+.ks .st .k{display:block;font-size:11.5px;color:var(--mute);margin-bottom:1px}
+.ks .st b{font-size:16px}
+.ks .st .big{font-size:20px;font-weight:800}
+.ks .st .pay{background:var(--tint)}
+.ks .st .up{color:var(--green)}.ks .st .dn{color:var(--mute)}
+.ks .sep{color:var(--mute);font-weight:700;padding:0 2px}.ks .lab{font-size:12px;color:var(--mute)}
+.ks .chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:7px;padding:2px 9px 2px 2px;font-size:13.5px;font-weight:600;background:var(--card)}
+.ks .chip .no{margin-right:6px;border:none;border-radius:5px;min-width:24px;height:24px;line-height:24px}
+.ks .pill{display:inline-block;padding:2px 11px;border-radius:12px;border:1px solid var(--line);font-weight:700;font-size:13.5px;background:var(--card)}
+.ks .foot{font-size:11.5px;color:var(--mute);margin-top:16px}
+.ks ul{margin:4px 0;padding-left:20px}
+.ks .recs{display:flex;gap:8px;flex-wrap:wrap}
+.ks .pcols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}.ks .pc{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:3px 0}
+.ks .pt{margin:4px 0;font-size:13px}.ks .pcard.cur{border-left:6px solid var(--green)}
+.ks .bktbl td:first-child{min-width:170px;white-space:normal}.ks .bktbl td.num{white-space:normal;min-width:110px}
+.ks .hero .rec.tr .lv{font-size:17px}
+.ks .skip{background:var(--amber-bg);border-color:var(--amber-line);border-left:6px solid var(--red);font-size:13.5px}
+.ks .mt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0}
+.ks .mt .k{flex:1 1 240px;font-size:13.5px}.ks .mt .sub{flex:0 0 auto}
+.ks .hz{position:relative}
+.ks .hz input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.ks .hztabs{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}
+.ks .hztabs label{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:700}
+.ks .hzp{display:none}
+.ks .hzsc{overflow-x:auto;direction:rtl;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.ks .hzp svg{display:block;min-width:720px;direction:ltr}
+.ks .hzcap{margin:6px 2px 8px;font-size:13px}
+.ks .formation{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ks .fc{background:var(--tint);border:1px solid var(--line);border-radius:10px;padding:8px}
+.ks .fh{font-weight:800;margin-bottom:6px}
+.ks .fm{display:flex;align-items:center;gap:6px;margin:4px 0;flex-wrap:wrap}
+.ks .gapwrap{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:12px;align-items:start}
+.ks .gp{margin-bottom:8px;font-size:13px}.ks .gp .chip{margin:2px 6px 2px 0}
+.ks .bk{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}
+.ks .bk>div{background:var(--tint);border-radius:8px;padding:6px 10px}
+.ks .bk .k{display:block;font-size:11.5px;color:var(--mute)}.ks .bk b{font-size:16px}
+.ks .bk .up{color:var(--green)}.ks .bk .dn{color:var(--mute)}
+@media (max-width:560px){
+.ks .formation{grid-template-columns:1fr}.ks .pcols{grid-template-columns:1fr}.ks .gapwrap{grid-template-columns:1fr}
+.ks{padding:8px}.ks .hero h2{font-size:20px}.ks .bar{display:none}.ks td,.ks th{padding:7px 5px}
+.ks .nm{white-space:nowrap}.ks .jk{display:block;margin:0 0 0 33px}.ks .sty{margin-left:33px;display:inline-block}
+.ks .why{margin-left:0}.ks .st{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<main>
+<header class="top"><h1>競馬レース予想シミュレーター</h1>
+<p>過去成績・適性・血統・調教・展開・当日の馬場傾向・天気から10万回シミュレーションします（娯楽・参考用）</p></header>
+<div class="tabs"><button id="t1" class="on">予想</button><button id="t2">成績・答え合わせ</button></div>
+
+<section id="p1">
+  <div class="formcard"><div class="form">
+    <div class="wide"><label>区分</label><div class="seg region" id="region"></div></div>
+    <div id="autoBox" class="wide form" style="padding:0">
+      <label>開催日<select id="day"></select></label>
+      <label class="chk" style="align-self:end"><input type="checkbox" id="mainonly" checked> 重賞・メイン(11R)のみ表示</label>
+      <label class="wide">レース<select id="race"></select></label>
+    </div>
+    <div id="manualBox" class="wide form hide" style="padding:0">
+      <p class="hint wide">海外など自動取得できないレース用です。1行に1頭「馬番,馬名,騎手,単勝オッズ,脚質(逃/先/差/追は省略可)」で入力します。過去成績が無いため、単勝オッズ中心の予想になります。</p>
+      <label>レース名<input type="text" id="m_name" placeholder="例: ○○大賞典"></label>
+      <label>開催地<input type="text" id="m_venue" placeholder="例: パリロンシャン"></label>
+      <label>馬場<select id="m_surface"><option>芝</option><option>ダ</option></select></label>
+      <label>距離(m)<input type="number" id="m_dist" value="2400" min="800" max="4000" step="100"></label>
+      <label>馬場状態<select id="m_cond"><option>良</option><option>稍重</option><option>重</option><option>不良</option></select></label>
+      <label class="wide">出走馬<textarea id="m_text" placeholder="1,サンプルホースA,騎手A,3.2,先&#10;2,サンプルホースB,騎手B,5.5,差&#10;3,サンプルホースC,騎手C,8.0&#10;4,サンプルホースD,騎手D,12.0,逃"></textarea></label>
+    </div>
+    <label>推奨する券種<select id="ticket">
+      <option>おまかせ(自動)</option><option>全種類</option><option>単勝</option><option>複勝</option><option>枠連</option>
+      <option>馬連</option><option>ワイド</option><option>馬単</option><option>3連複</option><option>3連単</option></select></label>
+    <div class="row wide"><button class="pri" id="go">予想する</button></div>
+  </div></div>
+  <div id="msg" class="small"></div>
+  <div id="out"></div>
+  <div id="extra" class="hide"><div class="row"><button class="sec" id="dl">HTMLで保存</button></div></div>
+</section>
+
+<section id="p2" class="hide"><div id="stats" class="ks"></div></section>
+</main>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const WEEK = "日月火水木金土";
+const REGIONS = ["すべて","中央","地方","海外","手入力"];
+let DAYS = [], CUR = null, ACCESS = "", REGION = "すべて";
+try { ACCESS = localStorage.getItem("ks_code") || ""; } catch (e) {}
+
+async function api(path) {
+  const r = await fetch(path, {headers: ACCESS ? {"x-access-code": ACCESS} : {}});
+  if (r.status === 401) {
+    const c = prompt("アクセスコードを入力してください");
+    if (!c) throw new Error("アクセスコードが必要です");
+    ACCESS = c; try { localStorage.setItem("ks_code", c); } catch (e) {}
+    return api(path);
+  }
+  return {status: r.status, body: await r.json()};
+}
+
+/* ---------- 操作 ---------- */
+const regionOf = r => r.region || "中央";
+const daysFor = () => DAYS.map(d => ({date: d.date, races: d.races.filter(r => REGION === "すべて" || regionOf(r) === REGION)})).filter(d => d.races.length);
+const mainRaces = rs => rs.filter(r => r.grade || r.rno === 11 || regionOf(r) === "海外");
+function seg(el, items, cur, onpick) {
+  el.innerHTML = items.map(x => `<button type="button" data-v="${esc(x)}" class="${x === cur ? "on" : ""}">${esc(x)}</button>`).join("");
+  el.querySelectorAll("button").forEach(bt => bt.onclick = () => onpick(bt.dataset.v));
+}
+function fillDays() {
+  const ds = daysFor();
+  $("day").innerHTML = ds.map(d => { const dt = new Date(d.date + "T00:00:00");
+    return `<option value="${d.date}">${dt.getMonth()+1}/${dt.getDate()}(${WEEK[dt.getDay()]})</option>`; }).join("") || `<option value="">開催なし</option>`;
+  const g = ds.find(d => d.races.some(r => r.grade)); if (g) $("day").value = g.date;
+  fillRaces();
+}
+function fillRaces() {
+  const d = daysFor().find(x => x.date === $("day").value); let rs = d ? d.races : [];
+  if ($("mainonly").checked && mainRaces(rs).length) rs = mainRaces(rs);
+  $("race").innerHTML = rs.map(r => {
+    const t = r.time ? `${+r.time.slice(0,2)}:${r.time.slice(3)} ` : "", g = r.grade ? ` [${r.grade}]` : "";
+    return `<option value="${r.race_id}">${esc(`${t}${r.venue}${r.rno ? r.rno + "R" : ""} ${r.name}${g} ${r.course}`.replace("  ", " "))}</option>`; }).join("") || `<option value="">（開催レースがありません）</option>`;
+  const gr = rs.find(r => r.grade === "G1") || rs.find(r => r.grade); if (gr) $("race").value = gr.race_id;
+}
+function setRegion(v) {
+  REGION = v; seg($("region"), REGIONS, REGION, setRegion);
+  const man = v === "手入力";
+  $("autoBox").classList.toggle("hide", man); $("manualBox").classList.toggle("hide", !man);
+  if (!man) fillDays();
+}
+function show() {
+  if (!CUR) return;
+  $("out").innerHTML = CUR.html;
+  $("extra").classList.remove("hide");
+}
+let busy = false;
+async function predict(keep) {
+  if (busy) return;
+  const man = REGION === "手入力";
+  if (!man && !$("race").value) return;
+  busy = true; $("go").disabled = true;
+  if (!keep) { $("extra").classList.add("hide"); $("out").innerHTML = ""; CUR = null; }
+  const enc = encodeURIComponent;
+  const mode = encodeURIComponent($("ticket").value);
+  const q = man
+    ? `/api/manual?mode=${mode}&name=${enc($("m_name").value)}&venue=${enc($("m_venue").value)}&surface=${enc($("m_surface").value)}&distance=${enc($("m_dist").value)}&condition=${enc($("m_cond").value)}&text=${enc($("m_text").value)}`
+    : `/api/predict?mode=${mode}&date=${enc($("day").value)}&race_id=${enc($("race").value)}`;
+  try {
+    for (let n = 0; n < 40; n++) {
+      $("msg").textContent = n ? `データを集めています…（${n * 3}秒）` : (man ? "計算しています…" : "予想を取得しています…");
+      const {status, body} = await api(q);
+      if (body.status === "ready") {
+        CUR = body; show();
+        const m = Math.round(body.age_sec / 60);
+        $("msg").textContent = man ? "入力された内容で計算しました（保存はされません）"
+          : `${m < 1 ? "1分以内" : m + "分前"}に計算した予想です${body.refreshing ? "（最新情報で再計算中。しばらくして再度押すと更新されます）" : ""}`;
+        return;
+      }
+      if (body.status === "failed") { $("msg").textContent = "❌ " + (body.message || "取得に失敗しました。"); return; }
+      if (body.status === "none") { $("msg").textContent = "このレースの予想はまだ準備できていません。開催が近づくと自動で作成されます。"; return; }
+      if (status >= 400) { $("msg").textContent = "❌ " + (man && body.error ? body.error : "取得できませんでした。時間をおいてお試しください。"); return; }
+      await new Promise(r => setTimeout(r, 3000));
+    }
+    $("msg").textContent = "時間がかかっています。しばらくしてからもう一度お試しください。";
+  } catch (e) { $("msg").textContent = "❌ " + e.message; }
+  finally { busy = false; $("go").disabled = false; }
+}
+function grpHtml(st) {
+  const pct = (a, n) => (a / n * 100).toFixed(1) + "%";
+  const blk = (title, g, lab) => { const ks = Object.keys(g || {}).sort(); if (!ks.length) return "";
+    return `<h3>${title}</h3><div class="tblwrap"><table><tr><th>区分</th><th>レース数</th><th>◎が1着</th><th>◎が3着内</th></tr>${ks.map(k => `<tr><td>${esc(lab(k))}</td><td class="num">${g[k].n}</td><td class="num">${pct(g[k].win, g[k].n)}</td><td class="num">${pct(g[k].top3, g[k].n)}</td></tr>`).join("")}</table></div>`; };
+  return blk("購入おすすめ度（★）ごとの成績", st.by_stars, k => /^\d+$/.test(k) ? "★".repeat(+k) : k)
+    + blk("荒れ方ごとの成績", st.by_upset, k => k) + blk("データ信頼度ごとの成績", st.by_trust, k => k)
+    + `<div class="sub">星や区分が上がるほど的中率も上がっていれば、指標に意味があります。</div>`;
+}
+async function loadStats() {
+  $("stats").innerHTML = "読み込み中…";
+  try {
+    const {body} = await api("/api/stats"), st = body.stats, p = body.params || {};
+    if (!st.n) { $("stats").innerHTML = `<div class="card">まだ答え合わせできる予想がありません（結果待ち ${st.pending || 0}レース）。レース終了後に自動で集計されます。</div>`; return; }
+    const pct = x => (x * 100).toFixed(1) + "%";
+    const mk = Object.entries(st.markets || {}).map(([k, m]) => `<tr><td>${esc(k)}</td><td class="num">${m.races}</td><td class="num">${m.hit}</td><td class="num">${pct(m.hit / m.races)}</td><td class="num">${m.cost ? Math.round(m.ret / m.cost * 100) + "%" : "-"}</td></tr>`).join("");
+    const cal = (rows) => rows.map(r => `<tr><td>${Math.round(r[0]*100)}-${Math.round(r[1]*100)}%</td><td class="num">${r[2]}</td><td class="num">${pct(r[3])}</td><td class="num">${pct(r[4])}</td></tr>`).join("");
+    $("stats").innerHTML = `<div class="card">結果が確定した予想: <b>${st.n}レース</b> ／ 結果待ち: ${st.pending}レース
+      ${p.blend != null ? `<br><span class="sub">自動調整中: 人気の混ぜ具合=${p.blend}、能力差の拡大率=${p.scale}</span>` : ""}</div>
+      <h3>予想上位の成績</h3><div class="card">予想1位が1着: <b>${pct(st.top1_win)}</b> ／ 3着以内: <b>${pct(st.top1_3)}</b><br>予想上位3頭に1着馬がいた: <b>${pct(st.win_in_top3)}</b>${st.logloss != null ? `<br><span class="sub">対数損失 ${st.logloss.toFixed(3)}（小さいほど良い）</span>` : ""}</div>
+      ${grpHtml(st)}
+      <h3>券種別（1点100円）</h3><div class="tblwrap"><table><tr><th>券種</th><th>件数</th><th>的中</th><th>的中率</th><th>回収率</th></tr>${mk}</table></div>
+      <h3>勝率の較正</h3><div class="tblwrap"><table><tr><th>予想の範囲</th><th>頭数</th><th>予想平均</th><th>実際</th></tr>${cal(st.cal_win)}</table></div>
+      <h3>3着内率の較正</h3><div class="tblwrap"><table><tr><th>予想の範囲</th><th>頭数</th><th>予想平均</th><th>実際</th></tr>${cal(st.cal_top3)}</table></div>
+      <div class="foot">件数が少ないうちは偶然のブレが大きく、参考程度です（目安: 100レース以上）。回収率は払戻を読めたレースのみで計算しています。記録の対象は、発走前に自動で作った標準の予想だけです（手入力・海外は含みません）。</div>`;
+  } catch (e) { $("stats").innerHTML = esc(e.message); }
+}
+function tab(n) { $("p1").classList.toggle("hide", n !== 1); $("p2").classList.toggle("hide", n !== 2);
+  $("t1").classList.toggle("on", n === 1); $("t2").classList.toggle("on", n === 2); if (n === 2) loadStats(); }
+function download() {
+  if (!CUR) return;
+  const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(CUR.title || "予想")}</title><style>body{margin:12px auto;max-width:900px;padding:0 12px}${[...document.querySelectorAll("style")].map(s => s.textContent).join("\n")}</style></head><body>${$("out").innerHTML}</body></html>`;
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([html], {type: "text/html"}));
+  a.download = `yoso_${String(CUR.race_id || "manual").replace(/[^0-9A-Za-z_-]/g, "_")}.html`; a.click(); URL.revokeObjectURL(a.href);
+}
+$("t1").onclick = () => tab(1); $("t2").onclick = () => tab(2);
+$("day").onchange = fillRaces; $("mainonly").onchange = fillRaces;
+$("go").onclick = () => predict(false); $("ticket").onchange = () => { if (CUR) predict(true); };
+$("dl").onclick = download;
+seg($("region"), REGIONS, REGION, setRegion);
+(async () => {
+  try { const {body} = await api("/api/races"); DAYS = body.days || []; fillDays();
+    if (!DAYS.length) $("msg").textContent = "開催レースの情報がまだありません。開催週に自動で更新されます。"; }
+  catch (e) { $("msg").textContent = "❌ " + e.message; }
+})();
+</script>
+</body>
+</html>

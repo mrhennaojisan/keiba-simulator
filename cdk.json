@@ -1,0 +1,10 @@
+{
+  "app": "python app.py",
+  "context": {
+    "access_code": "",
+    "budget_email": "",
+    "worker_concurrency": 0,
+    "precompute_mode": "main",
+    "autotune": false
+  }
+}

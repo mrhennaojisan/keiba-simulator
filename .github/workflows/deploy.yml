@@ -1,0 +1,32 @@
+name: deploy
+# 手動実行のみ。AWSへはアクセスキーではなく OIDC（一時的な認証）で入る。
+on:
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production        # GitHubの環境保護ルールで承認者を設定できる
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -q tests/test_flow.py        # テストが通らなければデプロイしない
+      - run: ./scripts/build_lambda.sh                     # 毎回ここで作る（古いzipの取り違えを防ぐ）
+      - run: |
+          test "$(grep -c PAGE_MODES build/lambda/keiba_core.py)" -ge 1   # 最新コードが入っているか確認
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-northeast-1
+      - run: npm install -g aws-cdk
+      - run: |
+          cdk deploy --require-approval never \
+            -c access_code="${{ secrets.ACCESS_CODE }}" \
+            -c alert_email="${{ secrets.ALERT_EMAIL }}" \
+            -c budget_email="${{ secrets.ALERT_EMAIL }}"

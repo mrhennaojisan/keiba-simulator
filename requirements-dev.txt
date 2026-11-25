@@ -1,0 +1,8 @@
+-r requirements.txt
+boto3
+moto[dynamodb]
+pytest
+numpy
+pandas
+requests
+beautifulsoup4
